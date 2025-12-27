@@ -8,6 +8,8 @@ import {
   View,
 } from "react-native";
 
+import { useTheme } from "@/theme/theme";
+
 type AnimatedRevealProps = {
   label?: string;
   onRevealStart: () => void;
@@ -21,6 +23,7 @@ export function AnimatedReveal({
   onRevealStart,
   onRevealEnd,
 }: AnimatedRevealProps) {
+  const { colors } = useTheme();
   const translateY = useRef(new Animated.Value(0)).current;
   const [busy, setBusy] = useState(false);
 
@@ -56,13 +59,22 @@ export function AnimatedReveal({
       hitSlop={24}
     >
       <Animated.View
-        style={[styles.button, { transform: [{ translateY }] }]}
+        style={[
+          styles.button,
+          {
+            transform: [{ translateY }],
+            backgroundColor: colors.surfaceStrong,
+            borderColor: colors.cardBorder,
+          },
+        ]}
         pointerEvents="none"
       >
-        <View style={styles.iconBubble}>
-          <Text style={styles.icon}>⬆︎</Text>
+        <View style={[styles.iconBubble, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.icon, { color: colors.primary }]}>⬆︎</Text>
         </View>
-        <Text style={styles.label}>{busy ? "Revealing…" : label}</Text>
+        <Text style={[styles.label, { color: colors.text }]}>
+          {busy ? "Revealing…" : label}
+        </Text>
       </Animated.View>
     </Pressable>
   );

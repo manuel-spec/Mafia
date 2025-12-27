@@ -1,5 +1,6 @@
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
-import React from "react";
+import { Link } from "expo-router";
+import React, { useMemo } from "react";
 import {
   KeyboardAvoidingView,
   Platform,
@@ -9,6 +10,8 @@ import {
   Text,
   View,
 } from "react-native";
+
+import { useTheme } from "@/theme/theme";
 
 export type RoleSetupProps = {
   playerCount: string;
@@ -29,6 +32,7 @@ export function RoleSetup({
   onMafiaCountChange,
   onAssign,
 }: RoleSetupProps) {
+  const { colors, mode, toggle } = useTheme();
   const players = Math.max(Number(playerCount) || 0, 1);
   const mafia = Math.max(Number(mafiaCount) || 0, 0);
   const villagers = Math.max(players - mafia, 0);
@@ -43,7 +47,8 @@ export function RoleSetup({
       ? "Mafia heavy"
       : "Balanced";
 
-  const balanceColor = balanceLabel === "Balanced" ? "#35c36b" : "#f5a524";
+  const balanceColor =
+    balanceLabel === "Balanced" ? colors.success : colors.warning;
 
   const clampPlayers = (value: number) => Math.max(1, value);
   const clampMafia = (value: number, totalPlayers: number) => {
@@ -68,85 +73,185 @@ export function RoleSetup({
       ? (value: number) => Math.max(0.05, value / players)
       : () => 0.5;
 
+  const panelStyle = useMemo(
+    () => [
+      {
+        backgroundColor: colors.surfaceStrong,
+        borderColor: colors.cardBorder,
+        shadowColor: colors.shadow,
+      },
+    ],
+    [colors]
+  );
+
+  const balanceBadgeStyle = useMemo(
+    () => [{ backgroundColor: colors.surface, borderColor: balanceColor }],
+    [balanceColor, colors.surface]
+  );
+
   return (
     <KeyboardAvoidingView
       style={styles.flex}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={32}
     >
-      <ScrollView contentContainerStyle={styles.container}>
+      <ScrollView
+        contentContainerStyle={[
+          styles.container,
+          { backgroundColor: colors.background },
+        ]}
+      >
         <View style={styles.headerRow}>
-          <Ionicons name="chevron-back" size={24} color="#d9cde5" />
-          <Text style={styles.stepLabel}>SETUP MISSION</Text>
+          <Ionicons name="chevron-back" size={24} color={colors.muted} />
+          <Text style={[styles.stepLabel, { color: colors.muted }]}>
+            SETUP MISSION
+          </Text>
+          <View style={{ flex: 1 }} />
+          <Pressable
+            onPress={toggle}
+            style={[
+              styles.toggle,
+              {
+                backgroundColor: colors.surfaceStrong,
+                borderColor: colors.cardBorder,
+              },
+            ]}
+          >
+            <Ionicons
+              name={mode === "dark" ? "moon" : "sunny"}
+              size={18}
+              color={colors.muted}
+            />
+            <Text style={[styles.toggleText, { color: colors.text }]}>
+              {mode === "dark" ? "Dark" : "Light"}
+            </Text>
+          </Pressable>
         </View>
-        <Text style={styles.title}>New Game</Text>
-        <Text style={styles.subtitle}>
+
+        <View style={styles.titleRow}>
+          <Text style={[styles.title, { color: colors.text }]}>New Game</Text>
+          <Link href={{ pathname: "/info" }} asChild>
+            <Pressable
+              style={[styles.infoButton, { borderColor: colors.cardBorder }]}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={22}
+                color={colors.muted}
+              />
+            </Pressable>
+          </Link>
+        </View>
+        <Text style={[styles.subtitle, { color: colors.muted }]}>
           Configure your dossier before briefing the agents.
         </Text>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, ...panelStyle]}>
           <View style={styles.panelRow}>
             <View style={styles.panelLabelRow}>
               <MaterialCommunityIcons
                 name="account-group"
                 size={22}
-                color="#e53935"
+                color={colors.primary}
               />
-              <Text style={styles.panelLabel}>Total Players</Text>
+              <Text style={[styles.panelLabel, { color: colors.text }]}>
+                Total Players
+              </Text>
             </View>
-            <View style={styles.counter}>
+            <View
+              style={[
+                styles.counter,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <Pressable
-                style={styles.iconButton}
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
                 onPress={() => handlePlayersDelta(-1)}
               >
-                <Ionicons name="remove" size={22} color="#f1e6ff" />
+                <Ionicons name="remove" size={22} color={colors.text} />
               </Pressable>
-              <Text style={styles.counterValue}>{players}</Text>
+              <Text style={[styles.counterValue, { color: colors.text }]}>
+                {players}
+              </Text>
               <Pressable
-                style={styles.iconButton}
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
                 onPress={() => handlePlayersDelta(1)}
               >
-                <Ionicons name="add" size={22} color="#f1e6ff" />
+                <Ionicons name="add" size={22} color={colors.text} />
               </Pressable>
             </View>
           </View>
         </View>
 
-        <View style={styles.panel}>
+        <View style={[styles.panel, ...panelStyle]}>
           <View style={styles.panelRow}>
             <View style={styles.panelLabelRow}>
               <MaterialCommunityIcons
                 name="drama-masks"
                 size={22}
-                color="#e53935"
+                color={colors.primary}
               />
-              <Text style={styles.panelLabel}>Mafia Count</Text>
+              <Text style={[styles.panelLabel, { color: colors.text }]}>
+                Mafia Count
+              </Text>
             </View>
-            <View style={styles.counter}>
+            <View
+              style={[
+                styles.counter,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
               <Pressable
-                style={styles.iconButton}
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
                 onPress={() => handleMafiaDelta(-1)}
               >
-                <Ionicons name="remove" size={22} color="#f1e6ff" />
+                <Ionicons name="remove" size={22} color={colors.text} />
               </Pressable>
-              <Text style={styles.counterValue}>{mafia}</Text>
+              <Text style={[styles.counterValue, { color: colors.text }]}>
+                {mafia}
+              </Text>
               <Pressable
-                style={styles.iconButton}
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
                 onPress={() => handleMafiaDelta(1)}
               >
-                <Ionicons name="add" size={22} color="#f1e6ff" />
+                <Ionicons name="add" size={22} color={colors.text} />
               </Pressable>
             </View>
           </View>
-          <Text style={styles.helper}>
+          <Text style={[styles.helper, { color: colors.muted }]}>
             Max {maxMafia} mafia for {players || 0} players.
           </Text>
         </View>
 
-        <View style={styles.balanceCard}>
+        <View
+          style={[
+            styles.balanceCard,
+            { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+          ]}
+        >
           <View style={styles.balanceHeader}>
-            <Text style={styles.balanceLabel}>Current Balance</Text>
-            <View style={[styles.badge, { borderColor: balanceColor }]}>
+            <Text style={[styles.balanceLabel, { color: colors.muted }]}>
+              Current Balance
+            </Text>
+            <View style={[styles.badge, ...balanceBadgeStyle]}>
               <Text style={[styles.badgeText, { color: balanceColor }]}>
                 {balanceLabel}
               </Text>
@@ -154,11 +259,20 @@ export function RoleSetup({
           </View>
 
           <View style={styles.meterRow}>
-            <Text style={styles.meterLabel}>Villagers</Text>
-            <Text style={styles.meterLabel}>Mafia</Text>
+            <Text style={[styles.meterLabel, { color: colors.muted }]}>
+              Villagers
+            </Text>
+            <Text style={[styles.meterLabel, { color: colors.muted }]}>
+              Mafia
+            </Text>
           </View>
 
-          <View style={styles.meterTrack}>
+          <View
+            style={[
+              styles.meterTrack,
+              { backgroundColor: colors.surfaceStrong },
+            ]}
+          >
             <View
               style={[styles.meterFillVillager, { flex: percent(villagers) }]}
             />
@@ -167,24 +281,38 @@ export function RoleSetup({
           </View>
 
           <View style={styles.countRow}>
-            <Text style={styles.countValue}>{villagers}</Text>
-            <Text style={styles.countValue}>{mafia}</Text>
+            <Text style={[styles.countValue, { color: colors.text }]}>
+              {villagers}
+            </Text>
+            <Text style={[styles.countValue, { color: colors.text }]}>
+              {mafia}
+            </Text>
           </View>
 
-          <Text style={styles.recommendation}>
+          <Text style={[styles.recommendation, { color: colors.muted }]}>
             Recommended: 1 Mafia for every 4 players.
           </Text>
         </View>
 
-        {error ? <Text style={styles.error}>{error}</Text> : null}
+        {error ? (
+          <Text style={[styles.error, { color: colors.primary }]}>{error}</Text>
+        ) : null}
 
-        <Pressable style={styles.cta} onPress={onAssign}>
+        <Pressable
+          style={[
+            styles.cta,
+            { backgroundColor: colors.primary, shadowColor: colors.primary },
+          ]}
+          onPress={onAssign}
+        >
           <MaterialCommunityIcons
             name="lightning-bolt"
             size={22}
-            color="#fff"
+            color={colors.primaryText}
           />
-          <Text style={styles.ctaText}>Assign identities</Text>
+          <Text style={[styles.ctaText, { color: colors.primaryText }]}>
+            Assign identities
+          </Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -203,6 +331,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     gap: 10,
   },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   stepLabel: {
     color: "#c8bece",
     fontSize: 14,
@@ -219,6 +352,26 @@ const styles = StyleSheet.create({
     color: "#b9aebb",
     fontSize: 17,
     lineHeight: 24,
+  },
+  toggle: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  toggleText: {
+    fontWeight: "700",
+  },
+  infoButton: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
   },
   panel: {
     backgroundColor: "#1a1016",

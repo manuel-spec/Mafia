@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AnimatedReveal } from "@/components/animated-reveal";
+import { useTheme } from "@/theme/theme";
 import type { Role } from "@/types/role";
 
 const roleCopy: Record<Role, { title: string; detail: string; color: string }> =
@@ -24,6 +25,7 @@ type RoleRevealProps = {
 };
 
 export function RoleReveal({ roles, onReset }: RoleRevealProps) {
+  const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
 
@@ -58,16 +60,30 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
 
   if (isDone) {
     return (
-      <View style={styles.container}>
-        <Text style={styles.header}>All roles assigned</Text>
-        <View style={styles.card}>
-          <Text style={styles.doneTitle}>Shuffle complete</Text>
-          <Text style={styles.doneDetail}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <Text style={[styles.header, { color: colors.text }]}>
+          All roles assigned
+        </Text>
+        <View
+          style={[
+            styles.card,
+            { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+          ]}
+        >
+          <Text style={[styles.doneTitle, { color: colors.text }]}>
+            Shuffle complete
+          </Text>
+          <Text style={[styles.doneDetail, { color: colors.muted }]}>
             {roles.length} players • {mafiaTotal} mafia •{" "}
             {roles.length - mafiaTotal} civilians
           </Text>
-          <Pressable style={styles.secondaryButton} onPress={onReset}>
-            <Text style={styles.secondaryText}>Restart</Text>
+          <Pressable
+            style={[styles.secondaryButton, { borderColor: colors.cardBorder }]}
+            onPress={onReset}
+          >
+            <Text style={[styles.secondaryText, { color: colors.text }]}>
+              Restart
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -75,27 +91,39 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
   }
 
   return (
-    <View style={styles.container}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.hero}>
-        <Text style={styles.header}> Player {currentIndex + 1}</Text>
-        <Text style={styles.subheader}>
+        <Text style={[styles.header, { color: colors.text }]}>
+          {" "}
+          Player {currentIndex + 1}
+        </Text>
+        <Text style={[styles.subheader, { color: colors.muted }]}>
           Tap the icon—it rises to show your role, then glides down to hide
           before you pass the phone.
         </Text>
       </View>
 
-      <View style={styles.card}>
+      <View
+        style={[
+          styles.card,
+          { backgroundColor: colors.surface, borderColor: colors.cardBorder },
+        ]}
+      >
         {revealed && copy ? (
           <View style={styles.roleBox}>
             <Text style={[styles.roleTitle, { color: copy.color }]}>
               {copy.title}
             </Text>
-            <Text style={styles.roleDetail}>{copy.detail}</Text>
+            <Text style={[styles.roleDetail, { color: colors.muted }]}>
+              {copy.detail}
+            </Text>
           </View>
         ) : (
           <View style={styles.coverBox}>
-            <Text style={styles.coverTitle}>Ready?</Text>
-            <Text style={styles.coverDetail}>
+            <Text style={[styles.coverTitle, { color: colors.text }]}>
+              Ready?
+            </Text>
+            <Text style={[styles.coverDetail, { color: colors.muted }]}>
               Tap the icon; it will rise to reveal your secret role.
             </Text>
           </View>
@@ -103,8 +131,18 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
       </View>
 
       <View style={styles.footer}>
-        <View style={styles.badge}>
-          <Text style={styles.badgeText}>Players left: {remaining}</Text>
+        <View
+          style={[
+            styles.badge,
+            {
+              backgroundColor: colors.surfaceStrong,
+              borderColor: colors.cardBorder,
+            },
+          ]}
+        >
+          <Text style={[styles.badgeText, { color: colors.muted }]}>
+            Players left: {remaining}
+          </Text>
         </View>
       </View>
 
@@ -207,5 +245,16 @@ const styles = StyleSheet.create({
     color: "#b7beca",
     fontSize: 15,
     marginBottom: 12,
+  },
+  secondaryButton: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    alignSelf: "flex-start",
+  },
+  secondaryText: {
+    fontWeight: "700",
+    fontSize: 15,
   },
 });

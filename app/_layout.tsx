@@ -3,17 +3,29 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 
-export default function RootLayout() {
+import { ThemeProvider, useTheme } from "@/theme/theme";
+
+function LayoutInner() {
+  const { colors } = useTheme();
+
   useEffect(() => {
-    SystemUI.setBackgroundColorAsync("#050505").catch(() => {});
-  }, []);
+    SystemUI.setBackgroundColorAsync(colors.background).catch(() => {});
+  }, [colors.background]);
 
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: "#050505" },
+        contentStyle: { backgroundColor: colors.background },
       }}
     />
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <ThemeProvider>
+      <LayoutInner />
+    </ThemeProvider>
   );
 }

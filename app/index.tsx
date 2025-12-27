@@ -3,9 +3,11 @@ import { SafeAreaView, StyleSheet, View } from "react-native";
 
 import { RoleReveal } from "@/components/role-reveal";
 import { RoleSetup } from "@/components/role-setup";
+import { useTheme } from "@/theme/theme";
 import type { Role } from "@/types/role";
 
 export default function Index() {
+  const { colors } = useTheme();
   const [playerCount, setPlayerCount] = useState("8");
   const [mafiaCount, setMafiaCount] = useState("2");
   const [roles, setRoles] = useState<Role[]>([]);
@@ -59,8 +61,7 @@ export default function Index() {
   };
 
   return (
-    <View style={styles.screen}>
-      {/* <StatusBar style="light" translucent backgroundColor="transparent" /> */}
+    <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
         {roles.length === 0 ? (
           <RoleSetup
@@ -83,7 +84,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
-    backgroundColor: "#050505",
   },
   safeArea: {
     flex: 1,
