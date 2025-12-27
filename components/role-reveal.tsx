@@ -1,33 +1,33 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
-import { AnimatedReveal } from "@/components/animated-reveal";
+import { Ionicons } from "@expo/vector-icons";
+
 import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
 
-const roleCopy: Record<Role, { title: string; detail: string; color: string }> =
-  {
-    Mafia: {
-      title: "You are Mafia",
-      detail: "Stay hidden. Coordinate silently. Strike at night.",
-      color: "#ff6b6b",
-    },
-    Civilian: {
-      title: "You are Civilian",
-      detail: "Trust your gut. Watch the votes. Protect your town.",
-      color: "#63e6be",
-    },
-  };
+const roleCopy: Record<Role, { title: string; detail: string }> = {
+  Mafia: {
+    title: "You are Mafia",
+    detail: "Stay hidden. Coordinate silently. Strike at night.",
+  },
+  Civilian: {
+    title: "You are Civilian",
+    detail: "Trust your gut. Watch the votes. Protect your town.",
+  },
+};
 
 type RoleRevealProps = {
   roles: Role[];
-  onReset: () => void;
+  onRestart: () => void;
+  onExit: () => void;
 };
 
-export function RoleReveal({ roles, onReset }: RoleRevealProps) {
+export function RoleReveal({ roles, onRestart, onExit }: RoleRevealProps) {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const holdScale = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
     setCurrentIndex(0);
@@ -42,6 +42,10 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
   const isDone = currentIndex >= roles.length;
   const role = roles[currentIndex];
   const copy = role ? roleCopy[role] : undefined;
+  const remaining = Math.max(
+    roles.length - currentIndex - (revealed ? 0 : 1),
+    0
+  );
 
   const advanceToNext = () => {
     const next = currentIndex + 1;
@@ -53,35 +57,60 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
     }
   };
 
-  const remaining = Math.max(
-    roles.length - currentIndex - (revealed ? 1 : 0),
-    0
-  );
+  const handleHoldStart = () => {
+    Animated.spring(holdScale, {
+      toValue: 0.96,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 120,
+    }).start();
+    setRevealed(true);
+  };
+
+  const handleHoldEnd = () => {
+    Animated.spring(holdScale, {
+      toValue: 1,
+      useNativeDriver: true,
+      friction: 6,
+      tension: 120,
+    }).start();
+    setRevealed(false);
+    advanceToNext();
+  };
 
   if (isDone) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <Text style={[styles.header, { color: colors.text }]}>
-          All roles assigned
-        </Text>
-        <View
-          style={[
-            styles.card,
-            { backgroundColor: colors.surface, borderColor: colors.cardBorder },
-          ]}
-        >
+        <View style={styles.topBar}>
+          <Pressable
+            onPress={onExit}
+            style={[styles.iconButton, { borderColor: colors.cardBorder }]}
+          >
+            <Ionicons name="chevron-back" size={22} color={colors.text} />
+          </Pressable>
+          <Text style={[styles.roundText, { color: colors.text }]}>
+            Summary
+          </Text>
+          <View style={{ width: 38 }} />
+        </View>
+
+        <View style={[styles.summaryCard, { borderColor: colors.cardBorder }]}>
+          \
           <Text style={[styles.doneTitle, { color: colors.text }]}>
-            Shuffle complete
+            All roles assigned
           </Text>
           <Text style={[styles.doneDetail, { color: colors.muted }]}>
             {roles.length} players • {mafiaTotal} mafia •{" "}
             {roles.length - mafiaTotal} civilians
           </Text>
           <Pressable
-            style={[styles.secondaryButton, { borderColor: colors.cardBorder }]}
-            onPress={onReset}
+            style={[
+              styles.primaryButton,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+            ]}
+            onPress={onRestart}
           >
-            <Text style={[styles.secondaryText, { color: colors.text }]}>
+            <Text style={[styles.primaryText, { color: colors.primaryText }]}>
               Restart
             </Text>
           </Pressable>
@@ -92,45 +121,47 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={styles.topBar}>
+        <Pressable
+          onPress={onExit}
+          style={[styles.iconButton, { borderColor: colors.cardBorder }]}
+        >
+          <Ionicons name="chevron-back" size={22} color={colors.text} />
+        </Pressable>
+        <Text style={[styles.roundText, { color: colors.text }]}>Round 1</Text>
+        <View style={{ width: 38 }} />
+      </View>
+
+      <View style={styles.avatarArea}>
+        <View style={[styles.avatarRing, { shadowColor: colors.primary }]}>
+          <View
+            style={[styles.avatarCircle, { borderColor: colors.cardBorder }]}
+          />
+          <View
+            style={[styles.secretPill, { backgroundColor: colors.primary }]}
+          >
+            <Ionicons name="lock-closed" size={14} color={colors.primaryText} />
+            <Text style={[styles.secretText, { color: colors.primaryText }]}>
+              Secret
+            </Text>
+          </View>
+        </View>
+      </View>
+
       <View style={styles.hero}>
-        <Text style={[styles.header, { color: colors.text }]}>
-          {" "}
+        <Text style={[styles.sectionLabel, { color: colors.primary }]}>
+          Current Turn
+        </Text>
+        <Text style={[styles.playerLabel, { color: colors.text }]}>
           Player {currentIndex + 1}
         </Text>
-        <Text style={[styles.subheader, { color: colors.muted }]}>
-          Tap the icon—it rises to show your role, then glides down to hide
-          before you pass the phone.
+        <Text style={[styles.helper, { color: colors.muted }]}>
+          Pass the phone to Player {currentIndex + 1}. Ensure no one else is
+          watching your screen.
         </Text>
       </View>
 
-      <View
-        style={[
-          styles.card,
-          { backgroundColor: colors.surface, borderColor: colors.cardBorder },
-        ]}
-      >
-        {revealed && copy ? (
-          <View style={styles.roleBox}>
-            <Text style={[styles.roleTitle, { color: copy.color }]}>
-              {copy.title}
-            </Text>
-            <Text style={[styles.roleDetail, { color: colors.muted }]}>
-              {copy.detail}
-            </Text>
-          </View>
-        ) : (
-          <View style={styles.coverBox}>
-            <Text style={[styles.coverTitle, { color: colors.text }]}>
-              Ready?
-            </Text>
-            <Text style={[styles.coverDetail, { color: colors.muted }]}>
-              Tap the icon; it will rise to reveal your secret role.
-            </Text>
-          </View>
-        )}
-      </View>
-
-      <View style={styles.footer}>
+      <View style={styles.statusRow}>
         <View
           style={[
             styles.badge,
@@ -140,20 +171,69 @@ export function RoleReveal({ roles, onReset }: RoleRevealProps) {
             },
           ]}
         >
+          <Ionicons
+            name={revealed ? "eye" : "eye-off"}
+            size={16}
+            color={colors.muted}
+          />
           <Text style={[styles.badgeText, { color: colors.muted }]}>
-            Players left: {remaining}
+            {revealed ? "Role is shown" : "Role is hidden"}
           </Text>
         </View>
+        <Text style={[styles.remainingText, { color: colors.muted }]}>
+          {remaining} left
+        </Text>
       </View>
 
-      <AnimatedReveal
-        onRevealStart={() => setRevealed(true)}
-        onRevealEnd={() => {
-          setRevealed(false);
-          advanceToNext();
-        }}
-        label="Tap to reveal your role"
-      />
+      <View style={[styles.roleCard, { borderColor: colors.cardBorder }]}>
+        \
+        {revealed && copy ? (
+          <View style={styles.roleContent}>
+            <Text style={[styles.roleTitle, { color: colors.text }]}>
+              {copy.title}
+            </Text>
+            <Text style={[styles.roleDetail, { color: colors.muted }]}>
+              {copy.detail}
+            </Text>
+          </View>
+        ) : (
+          <View style={styles.coverContent}>
+            <Text style={[styles.coverTitle, { color: colors.text }]}>
+              Hold to reveal
+            </Text>
+            <Text style={[styles.coverDetail, { color: colors.muted }]}>
+              Release to conceal instantly and pass the phone.
+            </Text>
+          </View>
+        )}
+      </View>
+
+      <Animated.View
+        style={[
+          styles.holdPanel,
+          {
+            borderColor: colors.cardBorder,
+            backgroundColor: colors.surface,
+            transform: [{ scale: holdScale }],
+          },
+        ]}
+      >
+        <Pressable
+          onPressIn={handleHoldStart}
+          onPressOut={handleHoldEnd}
+          style={[
+            styles.holdButton,
+            { backgroundColor: colors.primary, shadowColor: colors.primary },
+          ]}
+        >
+          <Text style={[styles.holdText, { color: colors.primaryText }]}>
+            HOLD TO REVEAL
+          </Text>
+        </Pressable>
+        <Text style={[styles.holdHint, { color: colors.muted }]}>
+          Release to conceal instantly
+        </Text>
+      </Animated.View>
     </View>
   );
 }
@@ -162,99 +242,200 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 24,
-    gap: 14,
-    paddingBottom: 140,
+    gap: 18,
+    paddingBottom: 36,
+    justifyContent: "flex-start",
+  },
+  topBar: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  iconButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 1,
+  },
+  roundText: {
+    fontSize: 18,
+    fontWeight: "800",
+  },
+  avatarArea: {
+    alignItems: "center",
+    marginTop: 8,
+  },
+  avatarRing: {
+    width: 180,
+    height: 180,
+    borderRadius: 90,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.45,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  avatarCircle: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 2,
+    backgroundColor: "#0f0a0f",
+  },
+  secretPill: {
+    position: "absolute",
+    bottom: 12,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 999,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  secretText: {
+    fontWeight: "800",
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
   hero: {
+    alignItems: "center",
     gap: 6,
-    paddingTop: 30,
   },
-  header: {
-    color: "#ffffff",
-    fontSize: 24,
+  sectionLabel: {
+    fontSize: 14,
+    letterSpacing: 1,
+    textTransform: "uppercase",
     fontWeight: "800",
-    letterSpacing: 0.4,
   },
-  subheader: {
-    color: "#cfd3d8",
-    fontSize: 15,
-    lineHeight: 21,
+  playerLabel: {
+    fontSize: 34,
+    fontWeight: "900",
+    letterSpacing: 0.3,
   },
-  card: {
-    backgroundColor: "#0f1014",
+  helper: {
+    fontSize: 16,
+    lineHeight: 22,
+    textAlign: "center",
+  },
+  statusRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
+  badge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
+  badgeText: {
+    fontWeight: "700",
+  },
+  remainingText: {
+    fontSize: 14,
+  },
+  roleCard: {
+    backgroundColor: "#120c14",
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    borderColor: "#1f2025",
     shadowColor: "#000",
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 12 },
     elevation: 10,
-    gap: 16,
+    minHeight: 140,
+    justifyContent: "center",
   },
-  roleBox: {
+  roleContent: {
     gap: 10,
+    alignItems: "center",
   },
   roleTitle: {
     fontSize: 26,
     fontWeight: "900",
+    textAlign: "center",
   },
   roleDetail: {
-    color: "#d8dde6",
     fontSize: 16,
     lineHeight: 22,
+    textAlign: "center",
   },
-  coverBox: {
-    alignItems: "flex-start",
-    gap: 6,
+  coverContent: {
+    gap: 8,
+    alignItems: "center",
   },
   coverTitle: {
-    color: "#ffffff",
     fontSize: 22,
     fontWeight: "800",
   },
   coverDetail: {
-    color: "#9ca2ad",
     fontSize: 15,
+    textAlign: "center",
+    lineHeight: 21,
   },
-  footer: {
-    marginTop: 6,
+  holdPanel: {
+    position: "absolute",
+    left: 24,
+    right: 24,
+    bottom: 24,
+    borderRadius: 20,
+    padding: 16,
+    borderWidth: 1,
+    alignItems: "center",
     gap: 8,
   },
-  badge: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 999,
-    backgroundColor: "#151820",
-    borderWidth: 1,
-    borderColor: "#242734",
+  holdButton: {
+    width: "100%",
+    borderRadius: 16,
+    paddingVertical: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowOpacity: 0.35,
+    shadowRadius: 14,
+    shadowOffset: { width: 0, height: 10 },
   },
-  badgeText: {
-    color: "#cfd3d8",
-    fontWeight: "700",
+  holdText: {
+    fontSize: 16,
+    fontWeight: "900",
+    letterSpacing: 0.3,
+  },
+  holdHint: {
+    fontSize: 14,
+  },
+  summaryCard: {
+    marginTop: 40,
+    padding: 18,
+    borderRadius: 18,
+    borderWidth: 1,
+    gap: 12,
+    backgroundColor: "#120c14",
   },
   doneTitle: {
-    color: "#ffffff",
-    fontSize: 20,
-    fontWeight: "800",
-    marginBottom: 6,
+    fontSize: 22,
+    fontWeight: "900",
   },
   doneDetail: {
-    color: "#b7beca",
     fontSize: 15,
-    marginBottom: 12,
+    lineHeight: 21,
   },
-  secondaryButton: {
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
+  primaryButton: {
     alignSelf: "flex-start",
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    borderRadius: 12,
+    shadowOpacity: 0.35,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 8 },
   },
-  secondaryText: {
-    fontWeight: "700",
+  primaryText: {
+    fontWeight: "800",
     fontSize: 15,
+    letterSpacing: 0.3,
   },
 });

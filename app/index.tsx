@@ -1,16 +1,19 @@
 import { useMemo, useState } from "react";
 import { SafeAreaView, StyleSheet, View } from "react-native";
 
-import { RoleReveal } from "@/components/role-reveal";
+import { useRouter } from "expo-router";
+
 import { RoleSetup } from "@/components/role-setup";
+import { useGameStore } from "@/stores/game-store";
 import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
 
 export default function Index() {
   const { colors } = useTheme();
+  const router = useRouter();
+  const setGameRoles = useGameStore((state) => state.setRoles);
   const [playerCount, setPlayerCount] = useState("8");
   const [mafiaCount, setMafiaCount] = useState("2");
-  const [roles, setRoles] = useState<Role[]>([]);
   const [error, setError] = useState<string | null>(null);
 
   const maxMafia = useMemo(() => {
@@ -24,19 +27,16 @@ export default function Index() {
 
     if (!Number.isInteger(players) || players <= 0) {
       setError("Enter a valid player count (>=1).");
-      setRoles([]);
       return;
     }
 
     if (!Number.isInteger(mafia) || mafia < 0) {
       setError("Enter a valid mafia count (>=0).");
-      setRoles([]);
       return;
     }
 
     if (mafia >= players) {
       setError("Mafia count must be less than total players.");
-      setRoles([]);
       return;
     }
 
@@ -52,30 +52,22 @@ export default function Index() {
       [pool[i], pool[j]] = [pool[j], pool[i]];
     }
 
-    setRoles(pool);
-  };
-
-  const resetGame = () => {
-    setRoles([]);
-    setError(null);
+    setGameRoles(pool);
+    router.push("/reveal");
   };
 
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
-        {roles.length === 0 ? (
-          <RoleSetup
-            playerCount={playerCount}
-            mafiaCount={mafiaCount}
-            maxMafia={maxMafia}
-            error={error}
-            onPlayerCountChange={setPlayerCount}
-            onMafiaCountChange={setMafiaCount}
-            onAssign={assignRoles}
-          />
-        ) : (
-          <RoleReveal roles={roles} onReset={resetGame} />
-        )}
+        <RoleSetup
+          playerCount={playerCount}
+          mafiaCount={mafiaCount}
+          maxMafia={maxMafia}
+          error={error}
+          onPlayerCountChange={setPlayerCount}
+          onMafiaCountChange={setMafiaCount}
+          onAssign={assignRoles}
+        />
       </SafeAreaView>
     </View>
   );
