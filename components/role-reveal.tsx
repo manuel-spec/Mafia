@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { AnimatedReveal } from "@/components/animated-reveal";
-import { useTheme } from "@/theme/theme";
+import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
 
 const roleCopy: Record<Role, { title: string; detail: string; color: string }> =

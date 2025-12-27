@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 
-import { useTheme } from "@/theme/theme";
+import { useTheme } from "@/stores/theme-store";
 
 type AnimatedRevealProps = {
   label?: string;

@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { Stack } from "expo-router";
 import * as SystemUI from "expo-system-ui";
 
-import { ThemeProvider, useTheme } from "@/theme/theme";
+import { useTheme } from "@/stores/theme-store";
 
 function LayoutInner() {
   const { colors } = useTheme();
@@ -23,9 +23,5 @@ function LayoutInner() {
 }
 
 export default function RootLayout() {
-  return (
-    <ThemeProvider>
-      <LayoutInner />
-    </ThemeProvider>
-  );
+  return <LayoutInner />;
 }

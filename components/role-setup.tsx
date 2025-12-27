@@ -11,7 +11,7 @@ import {
   View,
 } from "react-native";
 
-import { useTheme } from "@/theme/theme";
+import { useTheme } from "@/stores/theme-store";
 
 export type RoleSetupProps = {
   playerCount: string;

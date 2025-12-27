@@ -3,7 +3,7 @@ import { SafeAreaView, StyleSheet, View } from "react-native";
 
 import { RoleReveal } from "@/components/role-reveal";
 import { RoleSetup } from "@/components/role-setup";
-import { useTheme } from "@/theme/theme";
+import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
 
 export default function Index() {
