@@ -1,1 +1,1 @@
-export type Role = "Mafia" | "Civilian";
+export type Role = "Mafia" | "Civilian" | "Doctor" | "Seer";

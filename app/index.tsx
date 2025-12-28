@@ -24,8 +24,10 @@ export default function Index() {
 
   const maxMafia = useMemo(() => {
     const players = Number(playerCount) || 0;
-    return Math.max(0, players - 1);
-  }, [playerCount]);
+    const specialCount =
+      (specialRoles.doctor ? 1 : 0) + (specialRoles.seer ? 1 : 0);
+    return Math.max(0, players - 1 - specialCount);
+  }, [playerCount, specialRoles.doctor, specialRoles.seer]);
 
   const assignRoles = () => {
     const players = Number(playerCount);
@@ -42,8 +44,20 @@ export default function Index() {
       return;
     }
 
-    if (mafia >= players) {
-      setError("Mafia count must be less than total players.");
+    const specialCount =
+      (specialRoles.doctor ? 1 : 0) + (specialRoles.seer ? 1 : 0);
+
+    if (mafia > maxMafia) {
+      setError(
+        `Mafia must be ≤ ${maxMafia} with current players and special roles.`
+      );
+      return;
+    }
+
+    if (mafia + specialCount > players) {
+      setError(
+        "Roles exceed total players. Lower mafia or disable a special role."
+      );
       return;
     }
 
@@ -59,10 +73,24 @@ export default function Index() {
 
     setError(null);
 
-    const pool: Role[] = [
-      ...Array.from({ length: mafia }, () => "Mafia" as Role),
-      ...Array.from({ length: players - mafia }, () => "Civilian" as Role),
-    ];
+    const pool: Role[] = [];
+
+    // Always add mafia first
+    pool.push(...Array.from({ length: mafia }, () => "Mafia" as Role));
+
+    // Add unique special roles if enabled
+    if (specialRoles.doctor) {
+      pool.push("Doctor");
+    }
+    if (specialRoles.seer) {
+      pool.push("Seer");
+    }
+
+    // Fill remaining with civilians
+    const remainingSlots = Math.max(players - pool.length, 0);
+    pool.push(
+      ...Array.from({ length: remainingSlots }, () => "Civilian" as Role)
+    );
 
     for (let i = pool.length - 1; i > 0; i -= 1) {
       const j = Math.floor(Math.random() * (i + 1));

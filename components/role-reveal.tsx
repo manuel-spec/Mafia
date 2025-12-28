@@ -23,11 +23,21 @@ const roleCopy: Record<Role, { title: string; detail: string }> = {
     title: "You are Civilian",
     detail: "Trust your gut. Watch the votes. Protect your town.",
   },
+  Doctor: {
+    title: "You are Doctor",
+    detail: "Choose wisely. Save one player when danger strikes.",
+  },
+  Seer: {
+    title: "You are Seer",
+    detail: "Read the table. Reveal a player’s true role each night.",
+  },
 };
 
 const roleAvatar: Record<Role, ImageSourcePropType> = {
   Mafia: require("../assets/players/imposter.jpg"),
   Civilian: require("../assets/players/civilian.jpg"),
+  Doctor: require("../assets/players/civilian.jpg"),
+  Seer: require("../assets/players/civilian.jpg"),
 };
 
 type RoleRevealProps = {
