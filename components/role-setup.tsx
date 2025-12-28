@@ -17,9 +17,11 @@ export type RoleSetupProps = {
   playerCount: string;
   mafiaCount: string;
   maxMafia: number;
+  roundMinutes: string;
   error?: string | null;
   onPlayerCountChange: (text: string) => void;
   onMafiaCountChange: (text: string) => void;
+  onRoundMinutesChange: (text: string) => void;
   onAssign: () => void;
 };
 
@@ -27,14 +29,17 @@ export function RoleSetup({
   playerCount,
   mafiaCount,
   maxMafia,
+  roundMinutes,
   error,
   onPlayerCountChange,
   onMafiaCountChange,
+  onRoundMinutesChange,
   onAssign,
 }: RoleSetupProps) {
   const { colors, mode, toggle } = useTheme();
   const players = Math.max(Number(playerCount) || 0, 1);
   const mafia = Math.max(Number(mafiaCount) || 0, 0);
+  const round = Math.max(Number(roundMinutes) || 0, 1);
   const villagers = Math.max(players - mafia, 0);
   const ratio = players > 0 ? mafia / players : 0;
 
@@ -66,6 +71,17 @@ export function RoleSetup({
   const handleMafiaDelta = (delta: number) => {
     const nextMafia = clampMafia(mafia + delta, players);
     onMafiaCountChange(String(nextMafia));
+  };
+
+  const clampRound = (value: number) => {
+    const min = 1;
+    const max = 30;
+    return Math.min(Math.max(value, min), max);
+  };
+
+  const handleRoundDelta = (delta: number) => {
+    const nextRound = clampRound(round + delta);
+    onRoundMinutesChange(String(nextRound));
   };
 
   const percent =
@@ -238,6 +254,60 @@ export function RoleSetup({
           </View>
           <Text style={[styles.helper, { color: colors.muted }]}>
             Max {maxMafia} mafia for {players || 0} players.
+          </Text>
+        </View>
+
+        <View style={[styles.panel, ...panelStyle]}>
+          <View style={styles.panelRow}>
+            <View style={styles.panelLabelRow}>
+              <MaterialCommunityIcons
+                name="timer-sand"
+                size={22}
+                color={colors.primary}
+              />
+              <Text style={[styles.panelLabel, { color: colors.text }]}>
+                Round Time
+              </Text>
+            </View>
+            <View
+              style={[
+                styles.counter,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Pressable
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
+                onPress={() => handleRoundDelta(-1)}
+              >
+                <Ionicons name="remove" size={22} color={colors.text} />
+              </Pressable>
+              <View style={styles.roundValueCol}>
+                <Text style={[styles.counterValue, { color: colors.text }]}>
+                  {round}
+                </Text>
+                <Text style={[styles.roundUnit, { color: colors.muted }]}>
+                  MIN
+                </Text>
+              </View>
+              <Pressable
+                style={[
+                  styles.iconButton,
+                  { backgroundColor: colors.surfaceStrong },
+                ]}
+                onPress={() => handleRoundDelta(1)}
+              >
+                <Ionicons name="add" size={22} color={colors.text} />
+              </Pressable>
+            </View>
+          </View>
+          <Text style={[styles.helper, { color: colors.muted }]}>
+            1-30 minutes. Recommended: 5 minutes per round.
           </Text>
         </View>
 
@@ -437,6 +507,15 @@ const styles = StyleSheet.create({
     color: "#8f8390",
     fontSize: 13,
     marginTop: 4,
+  },
+  roundValueCol: {
+    alignItems: "center",
+    minWidth: 64,
+  },
+  roundUnit: {
+    fontSize: 13,
+    fontWeight: "800",
+    letterSpacing: 0.5,
   },
   balanceCard: {
     backgroundColor: "#120c14",

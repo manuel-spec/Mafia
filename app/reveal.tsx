@@ -40,6 +40,9 @@ export default function RevealScreen() {
             reset();
             router.back();
           }}
+          onStartRound={() => {
+            router.push("/round");
+          }}
         />
       </View>
     </SafeAreaView>

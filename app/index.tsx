@@ -12,8 +12,12 @@ export default function Index() {
   const { colors } = useTheme();
   const router = useRouter();
   const setGameRoles = useGameStore((state) => state.setRoles);
+  const setRoundDurationSeconds = useGameStore(
+    (state) => state.setRoundDurationSeconds
+  );
   const [playerCount, setPlayerCount] = useState("8");
   const [mafiaCount, setMafiaCount] = useState("2");
+  const [roundMinutes, setRoundMinutes] = useState("5");
   const [error, setError] = useState<string | null>(null);
 
   const maxMafia = useMemo(() => {
@@ -24,6 +28,7 @@ export default function Index() {
   const assignRoles = () => {
     const players = Number(playerCount);
     const mafia = Number(mafiaCount);
+    const minutes = Number(roundMinutes);
 
     if (!Number.isInteger(players) || players <= 0) {
       setError("Enter a valid player count (>=1).");
@@ -40,6 +45,16 @@ export default function Index() {
       return;
     }
 
+    if (!Number.isInteger(minutes) || minutes < 1) {
+      setError("Enter a valid round time (>=1 minute).");
+      return;
+    }
+
+    if (minutes > 30) {
+      setError("Round time cannot exceed 30 minutes.");
+      return;
+    }
+
     setError(null);
 
     const pool: Role[] = [
@@ -53,6 +68,7 @@ export default function Index() {
     }
 
     setGameRoles(pool);
+    setRoundDurationSeconds(minutes * 60);
     router.push("/reveal");
   };
 
@@ -63,9 +79,11 @@ export default function Index() {
           playerCount={playerCount}
           mafiaCount={mafiaCount}
           maxMafia={maxMafia}
+          roundMinutes={roundMinutes}
           error={error}
           onPlayerCountChange={setPlayerCount}
           onMafiaCountChange={setMafiaCount}
+          onRoundMinutesChange={setRoundMinutes}
           onAssign={assignRoles}
         />
       </SafeAreaView>

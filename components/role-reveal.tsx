@@ -1,5 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  Image,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ImageSourcePropType,
+} from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
@@ -17,13 +25,24 @@ const roleCopy: Record<Role, { title: string; detail: string }> = {
   },
 };
 
+const roleAvatar: Record<Role, ImageSourcePropType> = {
+  Mafia: require("../assets/players/imposter.jpg"),
+  Civilian: require("../assets/players/civilian.jpg"),
+};
+
 type RoleRevealProps = {
   roles: Role[];
   onRestart: () => void;
   onExit: () => void;
+  onStartRound?: () => void;
 };
 
-export function RoleReveal({ roles, onRestart, onExit }: RoleRevealProps) {
+export function RoleReveal({
+  roles,
+  onRestart,
+  onExit,
+  onStartRound,
+}: RoleRevealProps) {
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
@@ -42,6 +61,8 @@ export function RoleReveal({ roles, onRestart, onExit }: RoleRevealProps) {
   const isDone = currentIndex >= roles.length;
   const role = roles[currentIndex];
   const copy = role ? roleCopy[role] : undefined;
+  const avatarSource =
+    revealed && role ? roleAvatar[role] : roleAvatar.Civilian;
   const remaining = Math.max(
     roles.length - currentIndex - (revealed ? 0 : 1),
     0
@@ -78,45 +99,18 @@ export function RoleReveal({ roles, onRestart, onExit }: RoleRevealProps) {
     advanceToNext();
   };
 
-  if (isDone) {
-    return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <View style={styles.topBar}>
-          <Pressable
-            onPress={onExit}
-            style={[styles.iconButton, { borderColor: colors.cardBorder }]}
-          >
-            <Ionicons name="chevron-back" size={22} color={colors.text} />
-          </Pressable>
-          <Text style={[styles.roundText, { color: colors.text }]}>
-            Summary
-          </Text>
-          <View style={{ width: 38 }} />
-        </View>
+  useEffect(() => {
+    if (isDone) {
+      if (onStartRound) {
+        onStartRound();
+      } else {
+        onRestart();
+      }
+    }
+  }, [isDone, onRestart, onStartRound]);
 
-        <View style={[styles.summaryCard, { borderColor: colors.cardBorder }]}>
-          \
-          <Text style={[styles.doneTitle, { color: colors.text }]}>
-            All roles assigned
-          </Text>
-          <Text style={[styles.doneDetail, { color: colors.muted }]}>
-            {roles.length} players • {mafiaTotal} mafia •{" "}
-            {roles.length - mafiaTotal} civilians
-          </Text>
-          <Pressable
-            style={[
-              styles.primaryButton,
-              { backgroundColor: colors.primary, shadowColor: colors.primary },
-            ]}
-            onPress={onRestart}
-          >
-            <Text style={[styles.primaryText, { color: colors.primaryText }]}>
-              Restart
-            </Text>
-          </Pressable>
-        </View>
-      </View>
-    );
+  if (isDone) {
+    return null;
   }
 
   return (
@@ -134,9 +128,18 @@ export function RoleReveal({ roles, onRestart, onExit }: RoleRevealProps) {
 
       <View style={styles.avatarArea}>
         <View style={[styles.avatarRing, { shadowColor: colors.primary }]}>
-          <View
-            style={[styles.avatarCircle, { borderColor: colors.cardBorder }]}
-          />
+          {avatarSource ? (
+            <Image
+              source={avatarSource}
+              style={[styles.avatarImage, { borderColor: colors.cardBorder }]}
+              resizeMode="cover"
+            />
+          ) : (
+            <View
+              style={[styles.avatarCircle, { borderColor: colors.cardBorder }]}
+            />
+          )}
+          {!revealed && <View style={styles.avatarScrim} />}
           <View
             style={[styles.secretPill, { backgroundColor: colors.primary }]}
           >
@@ -283,6 +286,19 @@ const styles = StyleSheet.create({
     borderRadius: 80,
     borderWidth: 2,
     backgroundColor: "#0f0a0f",
+  },
+  avatarImage: {
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    borderWidth: 2,
+  },
+  avatarScrim: {
+    position: "absolute",
+    width: 160,
+    height: 160,
+    borderRadius: 80,
+    backgroundColor: "rgba(0,0,0,0.45)",
   },
   secretPill: {
     position: "absolute",
@@ -436,6 +452,18 @@ const styles = StyleSheet.create({
   primaryText: {
     fontWeight: "800",
     fontSize: 15,
+    letterSpacing: 0.3,
+  },
+  secondaryButton: {
+    alignSelf: "flex-start",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  secondaryText: {
+    fontWeight: "800",
+    fontSize: 14,
     letterSpacing: 0.3,
   },
 });
