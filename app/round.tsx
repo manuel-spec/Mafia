@@ -8,6 +8,8 @@ import {
   View,
 } from "react-native";
 
+import Svg, { Circle } from "react-native-svg";
+
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
@@ -22,10 +24,15 @@ type RoundResult = {
 };
 
 const READY_SECONDS = 10;
+const RING_SIZE = 260;
+const RING_STROKE = 8;
+const RING_RADIUS = (RING_SIZE - RING_STROKE) / 2;
+const RING_CIRC = 2 * Math.PI * RING_RADIUS;
 
 export default function RoundScreen() {
   const router = useRouter();
   const { colors } = useTheme();
+  const roles = useGameStore((state) => state.roles);
   const roundDurationSeconds = useGameStore(
     (state) => state.roundDurationSeconds
   );
@@ -37,6 +44,16 @@ export default function RoundScreen() {
   const [rounds, setRounds] = useState<RoundResult[]>([]);
   const finishLock = useRef(false);
   const scrollRef = useRef<ScrollView | null>(null);
+
+  const totalPlayers = roles.length;
+  const mafiaCount = useMemo(
+    () => roles.filter((r) => r === "Mafia").length,
+    [roles]
+  );
+  const maxRounds = useMemo(() => {
+    const limit = totalPlayers - mafiaCount;
+    return limit > 0 ? limit : 0;
+  }, [mafiaCount, totalPlayers]);
 
   useEffect(() => {
     if (roundDurationSeconds <= 0) {
@@ -89,12 +106,16 @@ export default function RoundScreen() {
     setRemaining(0);
     setRounds((prev) => [
       ...prev,
-      {
-        id: prev.length + 1,
-        durationSeconds: roundDurationSeconds,
-        endedAt: Date.now(),
-        reason,
-      },
+      ...(prev.length < maxRounds
+        ? [
+            {
+              id: prev.length + 1,
+              durationSeconds: roundDurationSeconds,
+              endedAt: Date.now(),
+              reason,
+            },
+          ]
+        : []),
     ]);
   };
 
@@ -104,6 +125,15 @@ export default function RoundScreen() {
     setReadyRemaining(READY_SECONDS);
     setRemaining(roundDurationSeconds);
     setPhase("ready");
+  };
+
+  const startRound = () => {
+    if (phase !== "ready") return;
+    if (rounds.length >= maxRounds) return;
+    finishLock.current = false;
+    setReadyRemaining(0);
+    setRemaining(roundDurationSeconds);
+    setPhase("running");
   };
 
   const endEarly = () => {
@@ -130,6 +160,11 @@ export default function RoundScreen() {
     return 1 - remaining / roundDurationSeconds;
   }, [phase, remaining, roundDurationSeconds]);
 
+  const strokeDashoffset = useMemo(() => {
+    const used = Math.min(Math.max(progress, 0), 1);
+    return RING_CIRC * used;
+  }, [progress]);
+
   const phaseLabel = useMemo(() => {
     if (phase === "ready") return "Get Ready";
     if (phase === "running") return "Current Phase";
@@ -141,6 +176,14 @@ export default function RoundScreen() {
     if (phase === "running") return "Argument";
     return "Argument";
   }, [phase]);
+
+  const currentRoundNumber = useMemo(() => {
+    const base = phase === "finished" ? rounds.length : rounds.length + 1;
+    if (maxRounds <= 0) return base;
+    return Math.min(base, maxRounds);
+  }, [maxRounds, phase, rounds.length]);
+
+  const roundsCapReached = maxRounds > 0 && rounds.length >= maxRounds;
 
   return (
     <SafeAreaView
@@ -172,7 +215,11 @@ export default function RoundScreen() {
           </Pressable>
         </View>
 
-        <Text style={[styles.roundTitle, { color: colors.text }]}>Round 1</Text>
+        <Text style={[styles.roundTitle, { color: colors.text }]}>
+          {maxRounds > 0
+            ? `Round ${currentRoundNumber} of ${maxRounds}`
+            : `Round ${currentRoundNumber}`}
+        </Text>
 
         <View style={styles.phaseBlock}>
           <Text style={[styles.phaseLabel, { color: colors.muted }]}>
@@ -184,12 +231,24 @@ export default function RoundScreen() {
         </View>
 
         <View style={styles.circleCard}>
-          <View
-            style={[
-              styles.circleOuter,
-              { borderColor: colors.primary, shadowColor: colors.primary },
-            ]}
-          >
+          <View style={[styles.circleOuter, { shadowColor: colors.primary }]}>
+            <Svg
+              width={RING_SIZE}
+              height={RING_SIZE}
+              style={[styles.circleSvg, { transform: [{ rotate: "-90deg" }] }]}
+            >
+              <Circle
+                cx={RING_SIZE / 2}
+                cy={RING_SIZE / 2}
+                r={RING_RADIUS}
+                stroke={colors.primary}
+                strokeWidth={RING_STROKE}
+                strokeDasharray={[RING_CIRC, RING_CIRC]}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                fill="none"
+              />
+            </Svg>
             <View
               style={[
                 styles.circleInner,
@@ -206,31 +265,26 @@ export default function RoundScreen() {
                 {phase === "ready" ? "Starting in" : "Remaining"}
               </Text>
             </View>
-            <View
-              style={[
-                styles.circleProgress,
-                {
-                  borderColor: colors.primary,
-                  transform: [{ rotate: `${progress * 360}deg` }],
-                  opacity: phase === "running" ? 1 : 0.25,
-                },
-              ]}
-            />
           </View>
         </View>
 
-        <Pressable
-          style={[
-            styles.endButton,
-            { borderColor: colors.cardBorder, backgroundColor: colors.surface },
-          ]}
-          onPress={endEarly}
-        >
-          <Ionicons name="stop" size={16} color={colors.text} />
-          <Text style={[styles.endText, { color: colors.text }]}>
-            End round early
-          </Text>
-        </Pressable>
+        {phase !== "ready" && !roundsCapReached ? (
+          <Pressable
+            style={[
+              styles.endButton,
+              {
+                borderColor: colors.cardBorder,
+                backgroundColor: colors.surface,
+              },
+            ]}
+            onPress={endEarly}
+          >
+            <Ionicons name="stop" size={16} color={colors.text} />
+            <Text style={[styles.endText, { color: colors.text }]}>
+              End Round
+            </Text>
+          </Pressable>
+        ) : null}
 
         {phase === "finished" ? (
           <View
@@ -254,31 +308,69 @@ export default function RoundScreen() {
         ) : null}
 
         <View style={styles.footerActions}>
-          <Pressable
-            style={[styles.secondaryButton, { borderColor: colors.cardBorder }]}
-            onPress={restartRound}
-          >
-            <Text style={[styles.secondaryText, { color: colors.text }]}>
-              Restart round
-            </Text>
-          </Pressable>
-          <Pressable
-            style={[
-              styles.primaryButton,
-              { backgroundColor: colors.primary, shadowColor: colors.primary },
-            ]}
-            disabled={phase === "running" || phase === "ready"}
-            onPress={() => {
-              finishLock.current = false;
-              setReadyRemaining(READY_SECONDS);
-              setRemaining(roundDurationSeconds);
-              setPhase("ready");
-            }}
-          >
-            <Text style={[styles.primaryText, { color: colors.primaryText }]}>
-              Next round
-            </Text>
-          </Pressable>
+          {phase === "ready" ? (
+            <Pressable
+              style={[
+                styles.startButton,
+                {
+                  backgroundColor: colors.primary,
+                  borderColor: colors.cardBorder,
+                  opacity: roundsCapReached ? 0.5 : 1,
+                },
+              ]}
+              disabled={roundsCapReached}
+              onPress={startRound}
+            >
+              <Text style={[styles.startText, { color: colors.text }]}>
+                Start round
+              </Text>
+            </Pressable>
+          ) : (
+            <>
+              <Pressable
+                style={[
+                  styles.secondaryButton,
+                  {
+                    borderColor: colors.cardBorder,
+                    backgroundColor: colors.primary,
+                  },
+                ]}
+                onPress={restartRound}
+              >
+                <Text style={[styles.secondaryText, { color: colors.text }]}>
+                  Restart Round
+                </Text>
+              </Pressable>
+              {phase === "finished" ? (
+                rounds.length < maxRounds ? (
+                  <Pressable
+                    style={[
+                      styles.primaryButton,
+                      {
+                        backgroundColor: colors.primary,
+                        shadowColor: colors.primary,
+                      },
+                    ]}
+                    onPress={() => {
+                      finishLock.current = false;
+                      setReadyRemaining(READY_SECONDS);
+                      setRemaining(roundDurationSeconds);
+                      setPhase("ready");
+                    }}
+                  >
+                    <Text
+                      style={[
+                        styles.primaryText,
+                        { color: colors.primaryText },
+                      ]}
+                    >
+                      Next round
+                    </Text>
+                  </Pressable>
+                ) : null
+              ) : null}
+            </>
+          )}
         </View>
       </ScrollView>
     </SafeAreaView>
@@ -343,15 +435,19 @@ const styles = StyleSheet.create({
     marginVertical: 8,
   },
   circleOuter: {
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    borderWidth: 10,
+    width: RING_SIZE,
+    height: RING_SIZE,
+    borderRadius: RING_SIZE / 2,
     alignItems: "center",
     justifyContent: "center",
     shadowOpacity: 0.35,
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
+  },
+  circleSvg: {
+    position: "absolute",
+    left: 0,
+    top: 0,
   },
   circleInner: {
     width: 210,
@@ -393,6 +489,19 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     fontSize: 16,
     letterSpacing: 0.4,
+  },
+  startButton: {
+    alignItems: "center",
+    justifyContent: "center",
+    paddingVertical: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+  },
+  startText: {
+    fontWeight: "900",
+    fontSize: 16,
+    letterSpacing: 0.4,
+    textTransform: "uppercase",
   },
   historyCard: {
     borderRadius: 16,
