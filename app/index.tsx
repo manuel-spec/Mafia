@@ -15,6 +15,8 @@ export default function Index() {
   const setRoundDurationSeconds = useGameStore(
     (state) => state.setRoundDurationSeconds
   );
+  const specialRoles = useGameStore((state) => state.specialRoles);
+  const setSpecialRoles = useGameStore((state) => state.setSpecialRoles);
   const [playerCount, setPlayerCount] = useState("8");
   const [mafiaCount, setMafiaCount] = useState("2");
   const [roundMinutes, setRoundMinutes] = useState("5");
@@ -72,6 +74,14 @@ export default function Index() {
     router.push("/reveal");
   };
 
+  const handleToggleDoctor = (enabled: boolean) => {
+    setSpecialRoles({ ...specialRoles, doctor: enabled });
+  };
+
+  const handleToggleSeer = (enabled: boolean) => {
+    setSpecialRoles({ ...specialRoles, seer: enabled });
+  };
+
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <SafeAreaView style={styles.safeArea}>
@@ -80,10 +90,14 @@ export default function Index() {
           mafiaCount={mafiaCount}
           maxMafia={maxMafia}
           roundMinutes={roundMinutes}
+          doctorEnabled={specialRoles.doctor}
+          seerEnabled={specialRoles.seer}
           error={error}
           onPlayerCountChange={setPlayerCount}
           onMafiaCountChange={setMafiaCount}
           onRoundMinutesChange={setRoundMinutes}
+          onToggleDoctor={handleToggleDoctor}
+          onToggleSeer={handleToggleSeer}
           onAssign={assignRoles}
         />
       </SafeAreaView>

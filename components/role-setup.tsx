@@ -12,16 +12,21 @@ import {
 } from "react-native";
 
 import { useTheme } from "@/stores/theme-store";
+import { SpecialRolesCard } from "./special-roles";
 
 export type RoleSetupProps = {
   playerCount: string;
   mafiaCount: string;
   maxMafia: number;
   roundMinutes: string;
+  doctorEnabled: boolean;
+  seerEnabled: boolean;
   error?: string | null;
   onPlayerCountChange: (text: string) => void;
   onMafiaCountChange: (text: string) => void;
   onRoundMinutesChange: (text: string) => void;
+  onToggleDoctor: (enabled: boolean) => void;
+  onToggleSeer: (enabled: boolean) => void;
   onAssign: () => void;
 };
 
@@ -30,10 +35,14 @@ export function RoleSetup({
   mafiaCount,
   maxMafia,
   roundMinutes,
+  doctorEnabled,
+  seerEnabled,
   error,
   onPlayerCountChange,
   onMafiaCountChange,
   onRoundMinutesChange,
+  onToggleDoctor,
+  onToggleSeer,
   onAssign,
 }: RoleSetupProps) {
   const { colors, mode, toggle } = useTheme();
@@ -256,6 +265,13 @@ export function RoleSetup({
             Max {maxMafia} mafia for {players || 0} players.
           </Text>
         </View>
+
+        <SpecialRolesCard
+          doctorEnabled={doctorEnabled}
+          seerEnabled={seerEnabled}
+          onToggleDoctor={onToggleDoctor}
+          onToggleSeer={onToggleSeer}
+        />
 
         <View style={[styles.panel, ...panelStyle]}>
           <View style={styles.panelRow}>
