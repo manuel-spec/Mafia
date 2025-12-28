@@ -17,6 +17,7 @@ function LayoutInner() {
       screenOptions={{
         headerShown: false,
         contentStyle: { backgroundColor: colors.background },
+        statusBarHidden: true,
       }}
     />
   );

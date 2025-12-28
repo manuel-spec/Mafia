@@ -46,7 +46,7 @@ export default function InfoScreen() {
           />
           <InfoRow
             label="Optional"
-            detail="Doctor saves one player; Detective checks one player (house rules)."
+            detail="Doctor saves one player; Seers checks one player (house rules)."
             color={colors.warning}
             textColor={colors.text}
             mutedColor={colors.muted}

@@ -37,6 +37,7 @@ export default function RoundScreen() {
     (state) => state.roundDurationSeconds
   );
   const resetStore = useGameStore((state) => state.reset);
+  const setStoreRounds = useGameStore((state) => state.setRounds);
 
   const [readyRemaining, setReadyRemaining] = useState(READY_SECONDS);
   const [remaining, setRemaining] = useState(roundDurationSeconds);
@@ -104,19 +105,32 @@ export default function RoundScreen() {
     finishLock.current = true;
     setPhase("finished");
     setRemaining(0);
-    setRounds((prev) => [
-      ...prev,
-      ...(prev.length < maxRounds
-        ? [
-            {
-              id: prev.length + 1,
-              durationSeconds: roundDurationSeconds,
-              endedAt: Date.now(),
-              reason,
-            },
-          ]
-        : []),
-    ]);
+    setRounds((prev) => {
+      const elapsed = Math.max(
+        0,
+        Math.min(roundDurationSeconds, roundDurationSeconds - remaining)
+      );
+
+      return [
+        ...prev,
+        ...(prev.length < maxRounds
+          ? [
+              {
+                id: prev.length + 1,
+                durationSeconds: elapsed,
+                endedAt: Date.now(),
+                reason,
+              },
+            ]
+          : []),
+      ];
+    });
+  };
+
+  const finalizeGame = () => {
+    if (rounds.length === 0) return;
+    setStoreRounds(rounds);
+    router.replace("/final");
   };
 
   const restartRound = () => {
@@ -184,6 +198,12 @@ export default function RoundScreen() {
   }, [maxRounds, phase, rounds.length]);
 
   const roundsCapReached = maxRounds > 0 && rounds.length >= maxRounds;
+
+  useEffect(() => {
+    if (roundsCapReached && phase === "finished" && rounds.length > 0) {
+      finalizeGame();
+    }
+  }, [roundsCapReached, phase, rounds]);
 
   return (
     <SafeAreaView
@@ -342,32 +362,51 @@ export default function RoundScreen() {
                 </Text>
               </Pressable>
               {phase === "finished" ? (
-                rounds.length < maxRounds ? (
+                <>
+                  {rounds.length < maxRounds ? (
+                    <Pressable
+                      style={[
+                        styles.primaryButton,
+                        {
+                          backgroundColor: colors.primary,
+                          shadowColor: colors.primary,
+                        },
+                      ]}
+                      onPress={() => {
+                        finishLock.current = false;
+                        setReadyRemaining(READY_SECONDS);
+                        setRemaining(roundDurationSeconds);
+                        setPhase("ready");
+                      }}
+                    >
+                      <Text
+                        style={[
+                          styles.primaryText,
+                          { color: colors.primaryText },
+                        ]}
+                      >
+                        Next round
+                      </Text>
+                    </Pressable>
+                  ) : null}
+
                   <Pressable
                     style={[
-                      styles.primaryButton,
+                      styles.secondaryButton,
                       {
-                        backgroundColor: colors.primary,
-                        shadowColor: colors.primary,
+                        borderColor: colors.cardBorder,
+                        backgroundColor: colors.surface,
                       },
                     ]}
-                    onPress={() => {
-                      finishLock.current = false;
-                      setReadyRemaining(READY_SECONDS);
-                      setRemaining(roundDurationSeconds);
-                      setPhase("ready");
-                    }}
+                    onPress={finalizeGame}
                   >
                     <Text
-                      style={[
-                        styles.primaryText,
-                        { color: colors.primaryText },
-                      ]}
+                      style={[styles.secondaryText, { color: colors.text }]}
                     >
-                      Next round
+                      End game
                     </Text>
                   </Pressable>
-                ) : null
+                </>
               ) : null}
             </>
           )}

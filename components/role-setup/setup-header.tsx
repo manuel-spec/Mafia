@@ -9,46 +9,42 @@ export function SetupHeader() {
 
   return (
     <View style={styles.container}>
-      <View style={styles.headerRow}>
-        <Ionicons name="chevron-back" size={24} color={colors.muted} />
-        <Text style={[styles.stepLabel, { color: colors.muted }]}>
-          SETUP MISSION
-        </Text>
-        <View style={{ flex: 1 }} />
-        <Pressable
-          onPress={toggle}
-          style={[
-            styles.toggle,
-            {
-              backgroundColor: colors.surfaceStrong,
-              borderColor: colors.cardBorder,
-            },
-          ]}
-        >
-          <Ionicons
-            name={mode === "dark" ? "moon" : "sunny"}
-            size={18}
-            color={colors.muted}
-          />
-          <Text style={[styles.toggleText, { color: colors.text }]}>
-            {mode === "dark" ? "Dark" : "Light"}
-          </Text>
-        </Pressable>
-      </View>
-
       <View style={styles.titleRow}>
         <Text style={[styles.title, { color: colors.text }]}>New Game</Text>
-        <Link href={{ pathname: "/info" }} asChild>
+
+        <View style={styles.actionsRow}>
           <Pressable
-            style={[styles.infoButton, { borderColor: colors.cardBorder }]}
+            onPress={toggle}
+            style={[
+              styles.toggle,
+              {
+                backgroundColor: colors.surfaceStrong,
+                borderColor: colors.cardBorder,
+              },
+            ]}
           >
             <Ionicons
-              name="information-circle-outline"
-              size={22}
+              name={mode === "dark" ? "moon" : "sunny"}
+              size={18}
               color={colors.muted}
             />
+            <Text style={[styles.toggleText, { color: colors.text }]}>
+              {mode === "dark" ? "Dark" : "Light"}
+            </Text>
           </Pressable>
-        </Link>
+
+          <Link href={{ pathname: "/info" }} asChild>
+            <Pressable
+              style={[styles.infoButton, { borderColor: colors.cardBorder }]}
+            >
+              <Ionicons
+                name="information-circle-outline"
+                size={22}
+                color={colors.muted}
+              />
+            </Pressable>
+          </Link>
+        </View>
       </View>
       <Text style={[styles.subtitle, { color: colors.muted }]}>
         Configure your dossier before briefing the agents.
@@ -87,6 +83,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
+  },
+  actionsRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    marginTop: 10,
   },
   title: {
     fontSize: 34,

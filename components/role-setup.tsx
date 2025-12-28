@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  View,
 } from "react-native";
 
 import { MaterialCommunityIcons } from "@expo/vector-icons";
@@ -100,78 +101,94 @@ export function RoleSetup({
 
   return (
     <KeyboardAvoidingView
-      style={styles.flex}
+      style={[styles.flex, { backgroundColor: colors.background }]}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
       keyboardVerticalOffset={32}
     >
-      <ScrollView
-        contentContainerStyle={[
-          styles.container,
-          { backgroundColor: colors.background },
-        ]}
-      >
-        <SetupHeader />
-
-        <CounterPanel
-          label="Total Players"
-          icon="account-group"
-          value={players}
-          onIncrement={() => handlePlayersDelta(1)}
-          onDecrement={() => handlePlayersDelta(-1)}
-        />
-
-        <CounterPanel
-          label="Mafia Count"
-          icon="drama-masks"
-          value={mafia}
-          onIncrement={() => handleMafiaDelta(1)}
-          onDecrement={() => handleMafiaDelta(-1)}
-          helperText={`Max ${maxMafia} mafia for ${players || 0} players.`}
-        />
-
-        <SpecialRolesCard
-          doctorEnabled={doctorEnabled}
-          seerEnabled={seerEnabled}
-          onToggleDoctor={onToggleDoctor}
-          onToggleSeer={onToggleSeer}
-        />
-
-        <RoundPanel
-          minutes={round}
-          onIncrement={() => handleRoundDelta(1)}
-          onDecrement={() => handleRoundDelta(-1)}
-        />
-
-        <BalanceCard
-          villagers={villagers}
-          mafia={mafia}
-          balanceLabel={balanceLabel}
-          balanceColor={balanceColor}
-          villagerFlex={percent(villagers)}
-          mafiaFlex={percent(mafia)}
-        />
-
-        {error ? (
-          <Text style={[styles.error, { color: colors.primary }]}>{error}</Text>
-        ) : null}
-
-        <Pressable
-          style={[
-            styles.cta,
-            { backgroundColor: colors.primary, shadowColor: colors.primary },
+      <View style={styles.flex}>
+        <ScrollView
+          contentContainerStyle={[
+            styles.container,
+            { backgroundColor: colors.background, paddingBottom: 160 },
           ]}
-          onPress={onAssign}
+          showsVerticalScrollIndicator={false}
         >
-          <MaterialCommunityIcons
-            name="lightning-bolt"
-            size={22}
-            color={colors.primaryText}
+          <SetupHeader />
+
+          <CounterPanel
+            label="Total Players"
+            icon="account-group"
+            value={players}
+            onIncrement={() => handlePlayersDelta(1)}
+            onDecrement={() => handlePlayersDelta(-1)}
           />
-          <Text style={[styles.ctaText, { color: colors.primaryText }]}>
-            Assign identities
-          </Text>
-        </Pressable>
-      </ScrollView>
+
+          <CounterPanel
+            label="Mafia Count"
+            icon="drama-masks"
+            value={mafia}
+            onIncrement={() => handleMafiaDelta(1)}
+            onDecrement={() => handleMafiaDelta(-1)}
+            helperText={`Max ${maxMafia} mafia for ${players || 0} players.`}
+          />
+
+          <SpecialRolesCard
+            doctorEnabled={doctorEnabled}
+            seerEnabled={seerEnabled}
+            onToggleDoctor={onToggleDoctor}
+            onToggleSeer={onToggleSeer}
+          />
+
+          <RoundPanel
+            minutes={round}
+            onIncrement={() => handleRoundDelta(1)}
+            onDecrement={() => handleRoundDelta(-1)}
+          />
+
+          <BalanceCard
+            villagers={villagers}
+            mafia={mafia}
+            balanceLabel={balanceLabel}
+            balanceColor={balanceColor}
+            villagerFlex={percent(villagers)}
+            mafiaFlex={percent(mafia)}
+          />
+
+          {error ? (
+            <Text style={[styles.error, { color: colors.primary }]}>
+              {error}
+            </Text>
+          ) : null}
+        </ScrollView>
+
+        <View
+          style={[
+            styles.footer,
+            {
+              backgroundColor: colors.background,
+              borderTopColor: colors.cardBorder,
+              shadowColor: colors.shadow,
+            },
+          ]}
+        >
+          <Pressable
+            style={[
+              styles.cta,
+              { backgroundColor: colors.primary, shadowColor: colors.primary },
+            ]}
+            onPress={onAssign}
+          >
+            <MaterialCommunityIcons
+              name="lightning-bolt"
+              size={22}
+              color={colors.primaryText}
+            />
+            <Text style={[styles.ctaText, { color: colors.primaryText }]}>
+              Assign identities
+            </Text>
+          </Pressable>
+        </View>
+      </View>
     </KeyboardAvoidingView>
   );
 }
@@ -209,5 +226,14 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: 0.6,
     textTransform: "uppercase",
+  },
+  footer: {
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderTopWidth: 1,
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: -4 },
+    elevation: 6,
   },
 });
