@@ -181,6 +181,33 @@ export default function RoundScreen() {
           <Text style={[styles.phaseTitle, { color: colors.text }]}>
             {phaseTitle}
           </Text>
+        </View>
+
+        <View style={styles.circleCard}>
+          <View
+            style={[
+              styles.circleOuter,
+              { borderColor: colors.primary, shadowColor: colors.primary },
+            ]}
+          >
+            <View
+              style={[
+                styles.circleInner,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.cardBorder,
+                },
+              ]}
+            >
+              <Text style={[styles.circleTime, { color: colors.text }]}>
+                {phase === "ready" ? formattedReady : formatted}
+              </Text>
+              <Text style={[styles.circleSub, { color: colors.muted }]}>
+                {phase === "ready" ? "Starting in" : "Remaining"}
+              </Text>
+            </View>
+            <View
+              style={[
                 styles.circleProgress,
                 {
                   borderColor: colors.primary,
@@ -190,42 +217,6 @@ export default function RoundScreen() {
               ]}
             />
           </View>
-        </View>
-
-        <View
-          style={[
-            styles.tensionCard,
-            { borderColor: colors.cardBorder, backgroundColor: colors.surface },
-          ]}
-        >
-          <View style={styles.tensionHeader}>
-            <View>
-              <Text style={[styles.tensionLabel, { color: colors.muted }]}>
-                Tension level
-              </Text>
-              <Text style={[styles.tensionValue, { color: colors.primary }]}>
-                High
-              </Text>
-            </View>
-            <View
-              style={[styles.chip, { backgroundColor: colors.surfaceStrong }]}
-            >
-              <MaterialCommunityIcons
-                name="trending-up"
-                size={14}
-                color={colors.primary}
-              />
-              <Text style={[styles.chipText, { color: colors.primary }]}>
-                Rising
-              </Text>
-            </View>
-          </View>
-          <View
-            style={[
-              styles.wavePlaceholder,
-              { backgroundColor: colors.surfaceStrong },
-            ]}
-          />
         </View>
 
         <Pressable
