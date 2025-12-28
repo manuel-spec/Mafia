@@ -1,10 +1,18 @@
 import { useEffect, useMemo, useState } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  Animated,
+  BackHandler,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
+import { ExitConfirmModal } from "./exit-confirm-modal";
 import {
   CivilianBadge,
   DoctorBadge,
@@ -47,12 +55,21 @@ export function RoleReveal({
   const { colors } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [revealed, setRevealed] = useState(false);
+  const [exitVisible, setExitVisible] = useState(false);
   const holdScale = useMemo(() => new Animated.Value(1), []);
 
   useEffect(() => {
     setCurrentIndex(0);
     setRevealed(false);
   }, [roles]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      setExitVisible(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   const mafiaTotal = useMemo(
     () => roles.filter((role) => role === "Mafia").length,
@@ -132,7 +149,7 @@ export function RoleReveal({
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={styles.topBar}>
         <Pressable
-          onPress={onExit}
+          onPress={() => setExitVisible(true)}
           style={[styles.iconButton, { borderColor: colors.cardBorder }]}
         >
           <Ionicons name="chevron-back" size={22} color={colors.text} />
@@ -250,6 +267,15 @@ export function RoleReveal({
           Release to conceal instantly
         </Text>
       </Animated.View>
+
+      <ExitConfirmModal
+        visible={exitVisible}
+        onStay={() => setExitVisible(false)}
+        onConfirm={() => {
+          setExitVisible(false);
+          onExit();
+        }}
+      />
     </View>
   );
 }
@@ -436,31 +462,5 @@ const styles = StyleSheet.create({
   doneDetail: {
     fontSize: 15,
     lineHeight: 21,
-  },
-  primaryButton: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 12,
-    shadowOpacity: 0.35,
-    shadowRadius: 12,
-    shadowOffset: { width: 0, height: 8 },
-  },
-  primaryText: {
-    fontWeight: "800",
-    fontSize: 15,
-    letterSpacing: 0.3,
-  },
-  secondaryButton: {
-    alignSelf: "flex-start",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 12,
-    borderWidth: 1,
-  },
-  secondaryText: {
-    fontWeight: "800",
-    fontSize: 14,
-    letterSpacing: 0.3,
   },
 });

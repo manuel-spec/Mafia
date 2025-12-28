@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  BackHandler,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -13,6 +14,7 @@ import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 
+import { ExitConfirmModal } from "@/components/exit-confirm-modal";
 import { useGameStore } from "@/stores/game-store";
 import { useTheme } from "@/stores/theme-store";
 
@@ -38,6 +40,7 @@ export default function RoundScreen() {
   );
   const resetStore = useGameStore((state) => state.reset);
   const setStoreRounds = useGameStore((state) => state.setRounds);
+  const [exitVisible, setExitVisible] = useState(false);
 
   const [readyRemaining, setReadyRemaining] = useState(READY_SECONDS);
   const [remaining, setRemaining] = useState(roundDurationSeconds);
@@ -91,6 +94,14 @@ export default function RoundScreen() {
     }, 1000);
     return () => clearInterval(id);
   }, [phase, remaining]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      setExitVisible(true);
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
   useEffect(() => {
     if (phase === "finished" && rounds.length > 0) {
@@ -216,7 +227,7 @@ export default function RoundScreen() {
       >
         <View style={styles.topBar}>
           <Pressable
-            onPress={() => router.back()}
+            onPress={() => setExitVisible(true)}
             style={[styles.iconButton, { borderColor: colors.cardBorder }]}
           >
             <Ionicons name="chevron-back" size={22} color={colors.text} />
@@ -412,6 +423,16 @@ export default function RoundScreen() {
           )}
         </View>
       </ScrollView>
+
+      <ExitConfirmModal
+        visible={exitVisible}
+        onStay={() => setExitVisible(false)}
+        onConfirm={() => {
+          setExitVisible(false);
+          resetStore();
+          router.replace("/");
+        }}
+      />
     </SafeAreaView>
   );
 }
