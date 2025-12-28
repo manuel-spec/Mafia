@@ -38,7 +38,7 @@ export default function RevealScreen() {
           }}
           onExit={() => {
             reset();
-            router.back();
+            router.replace("/");
           }}
           onStartRound={() => {
             router.push("/round");
