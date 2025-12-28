@@ -1,18 +1,16 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Animated,
-  Image,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-  type ImageSourcePropType,
-} from "react-native";
+import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
 
 import { Ionicons } from "@expo/vector-icons";
 
 import { useTheme } from "@/stores/theme-store";
 import type { Role } from "@/types/role";
+import {
+  CivilianBadge,
+  DoctorBadge,
+  MafiaBadge,
+  SeerBadge,
+} from "./role-avatars";
 
 const roleCopy: Record<Role, { title: string; detail: string }> = {
   Mafia: {
@@ -31,13 +29,6 @@ const roleCopy: Record<Role, { title: string; detail: string }> = {
     title: "You are Seer",
     detail: "Read the table. Reveal a player’s true role each night.",
   },
-};
-
-const roleAvatar: Record<Role, ImageSourcePropType> = {
-  Mafia: require("../assets/players/imposter.jpg"),
-  Civilian: require("../assets/players/civilian.jpg"),
-  Doctor: require("../assets/players/civilian.jpg"),
-  Seer: require("../assets/players/civilian.jpg"),
 };
 
 type RoleRevealProps = {
@@ -71,8 +62,22 @@ export function RoleReveal({
   const isDone = currentIndex >= roles.length;
   const role = roles[currentIndex];
   const copy = role ? roleCopy[role] : undefined;
-  const avatarSource =
-    revealed && role ? roleAvatar[role] : roleAvatar.Civilian;
+  const AvatarBadge = useMemo(() => {
+    if (revealed && role) {
+      switch (role) {
+        case "Mafia":
+          return MafiaBadge;
+        case "Doctor":
+          return DoctorBadge;
+        case "Seer":
+          return SeerBadge;
+        case "Civilian":
+        default:
+          return CivilianBadge;
+      }
+    }
+    return CivilianBadge;
+  }, [revealed, role]);
   const remaining = Math.max(
     roles.length - currentIndex - (revealed ? 0 : 1),
     0
@@ -138,17 +143,7 @@ export function RoleReveal({
 
       <View style={styles.avatarArea}>
         <View style={[styles.avatarRing, { shadowColor: colors.primary }]}>
-          {avatarSource ? (
-            <Image
-              source={avatarSource}
-              style={[styles.avatarImage, { borderColor: colors.cardBorder }]}
-              resizeMode="cover"
-            />
-          ) : (
-            <View
-              style={[styles.avatarCircle, { borderColor: colors.cardBorder }]}
-            />
-          )}
+          <AvatarBadge />
           {!revealed && <View style={styles.avatarScrim} />}
           <View
             style={[styles.secretPill, { backgroundColor: colors.primary }]}
@@ -198,8 +193,16 @@ export function RoleReveal({
         </Text>
       </View>
 
-      <View style={[styles.roleCard, { borderColor: colors.cardBorder }]}>
-        \
+      <View
+        style={[
+          styles.roleCard,
+          {
+            borderColor: colors.cardBorder,
+            backgroundColor: colors.surface,
+            shadowColor: colors.shadow,
+          },
+        ]}
+      >
         {revealed && copy ? (
           <View style={styles.roleContent}>
             <Text style={[styles.roleTitle, { color: colors.text }]}>
@@ -290,19 +293,6 @@ const styles = StyleSheet.create({
     shadowRadius: 24,
     shadowOffset: { width: 0, height: 12 },
   },
-  avatarCircle: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 2,
-    backgroundColor: "#0f0a0f",
-  },
-  avatarImage: {
-    width: 160,
-    height: 160,
-    borderRadius: 80,
-    borderWidth: 2,
-  },
   avatarScrim: {
     position: "absolute",
     width: 160,
@@ -366,11 +356,9 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
   roleCard: {
-    backgroundColor: "#120c14",
     borderRadius: 18,
     padding: 18,
     borderWidth: 1,
-    shadowColor: "#000",
     shadowOpacity: 0.35,
     shadowRadius: 16,
     shadowOffset: { width: 0, height: 12 },
@@ -440,7 +428,6 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     borderWidth: 1,
     gap: 12,
-    backgroundColor: "#120c14",
   },
   doneTitle: {
     fontSize: 22,

@@ -20,18 +20,18 @@ export type ThemeColors = {
 };
 
 const lightColors: ThemeColors = {
-  background: "#f5f0ff",
+  background: "#f7f9fc",
   surface: "#ffffff",
-  surfaceStrong: "#f0e7ff",
+  surfaceStrong: "#eef2f8",
   primary: "#e53935",
   primaryText: "#ffffff",
-  text: "#1f1426",
-  muted: "#6c6172",
-  border: "#e1d6f1",
-  cardBorder: "#e3d9f3",
+  text: "#1c1f2a",
+  muted: "#5d6474",
+  border: "#d9e0ec",
+  cardBorder: "#dfe6f1",
   success: "#1a9c60",
   warning: "#f5a524",
-  shadow: "#00000033",
+  shadow: "#00000024",
 };
 
 const darkColors: ThemeColors = {

@@ -352,7 +352,7 @@ export default function RoundScreen() {
                   styles.secondaryButton,
                   {
                     borderColor: colors.cardBorder,
-                    backgroundColor: colors.primary,
+                    backgroundColor: colors.surface,
                   },
                 ]}
                 onPress={restartRound}
